@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Conector IBM QRadar — Ruvic</title>
+  <link rel="stylesheet" href="assets/ruvic.css">
+</head>
+<body>
+  <main class="ruvic-container">
+    <nav class="ruvic-toc" aria-label="Índice">
+      <h2 data-i18n="toc_titulo">Contenido</h2>
+      <ol>
+        <li><a href="#que-es" data-i18n="toc_que_es">¿Qué es y para qué sirve?</a></li>
+        <li><a href="#prerrequisitos" data-i18n="toc_prerrequisitos">Prerrequisitos</a></li>
+        <li><a href="#configuracion-fabricante" data-i18n="toc_fabricante">Configuración en el fabricante</a></li>
+        <li><a href="#permisos" data-i18n="toc_permisos">Permisos requeridos</a></li>
+        <li><a href="#configuracion-ruvic" data-i18n="toc_ruvic">Configuración en Ruvic</a></li>
+        <li><a href="#verificacion" data-i18n="toc_verificacion">Verificación</a></li>
+        <li><a href="#solucion-problemas" data-i18n="toc_problemas">Solución de problemas</a></li>
+        <li><a href="#faq-seguridad" data-i18n="toc_faq">Preguntas frecuentes y notas de seguridad</a></li>
+      </ol>
+    </nav>
+
+    <h1 data-i18n="titulo">Conector IBM QRadar</h1>
+    <p class="guide-updated">{{ULTIMA_ACTUALIZACION}}</p>
+
+    <section>
+      <h2 id="que-es" data-i18n="que_es_h2">¿Qué es y para qué sirve?</h2>
+      <p data-i18n="que_es_p1">El conector IBM QRadar permite que el agente de Ruvic consulte y gestione ofensas de seguridad en tu consola de QRadar — listar ofensas, ver su detalle completo, y actualizar su estado.</p>
+      <p data-i18n="que_es_p2">Una vez configurado, puedes pedirle al agente cosas como:</p>
+      <ul>
+        <li data-i18n="que_es_li1">"¿Qué ofensas abiertas hay?"</li>
+        <li data-i18n="que_es_li2">"Dame el detalle de la ofensa #123."</li>
+        <li data-i18n="que_es_li3">"Cierra la ofensa #123, ya fue atendida."</li>
+      </ul>
+      <p data-i18n="que_es_p3">Operaciones soportadas:</p>
+      <table>
+        <thead><tr><th data-i18n="tabla_op_col1">Operación</th><th data-i18n="tabla_op_col2">Qué hace</th></tr></thead>
+        <tbody>
+          <tr><td><code>cybersecurity.list_offenses</code></td><td data-i18n="tabla_op_fila1">Lista ofensas, con filtro por estado</td></tr>
+          <tr><td><code>cybersecurity.get_offense_detail</code></td><td data-i18n="tabla_op_fila2">Consulta el detalle completo de una ofensa</td></tr>
+          <tr><td><code>cybersecurity.update_offense_status</code></td><td data-i18n="tabla_op_fila3">Actualiza el estado de una ofensa (Open/Hidden/Closed)</td></tr>
+        </tbody>
+      </table>
+      <div class="callout callout-info">
+        <span class="callout-title" data-i18n="callout_info_titulo">QRadar es siempre on-premise</span>
+        <span data-i18n="callout_info_texto">A diferencia de otros conectores en la nube, QRadar no tiene un endpoint compartido — cada cliente tiene su propia consola, con su propia URL.</span>
+      </div>
+    </section>
+
+    <section>
+      <h2 id="prerrequisitos" data-i18n="prereq_h2">Prerrequisitos</h2>
+      <ul>
+        <li data-i18n="prereq_li1">Una consola de <strong>IBM QRadar</strong> accesible por red desde donde corre Ruvic.</li>
+        <li data-i18n="prereq_li2">Acceso de administrador a QRadar para crear un Authorized Service (SEC token).</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2 id="configuracion-fabricante" data-i18n="fabricante_h2">Configuración en el fabricante</h2>
+      <ol class="ruvic-steps">
+        <li><strong data-i18n="fabricante_paso1_titulo">Ve a Authorized Services.</strong> <span data-i18n="fabricante_paso1_texto">En QRadar: Admin → User Management → Authorized Services.</span></li>
+        <li><strong data-i18n="fabricante_paso2_titulo">Crea un nuevo servicio autorizado.</strong> <span data-i18n="fabricante_paso2_texto">Clic en "Add Authorized Service", nombre descriptivo (ej. "Ruvic QRadar Connector").</span></li>
+        <li><strong data-i18n="fabricante_paso3_titulo">Elige el User Role y Security Profile.</strong> <span data-i18n="fabricante_paso3_texto">El User Role debe tener capacidad "Offenses" habilitada; el Security Profile debe acotarse a los dominios/redes que el agente necesita ver — evita usar "Admin" completo.</span></li>
+        <li><strong data-i18n="fabricante_paso4_titulo">Define la expiración y copia el token.</strong> <span data-i18n="fabricante_paso4_texto">Pon una fecha de expiración (recomendado), genera el servicio, y copia el "Authentication Token" — es tu SEC token.</span></li>
+        <li><strong data-i18n="fabricante_paso5_titulo">Despliega los cambios.</strong> <span data-i18n="fabricante_paso5_texto">Vuelve a la página de Admin y haz clic en "Deploy Changes" para activar el servicio.</span></li>
+      </ol>
+    </section>
+
+    <section>
+      <h2 id="permisos" data-i18n="permisos_h2">Permisos requeridos</h2>
+      <table>
+        <thead><tr><th data-i18n="permisos_tabla_col1">Permiso</th><th data-i18n="permisos_tabla_col2">Para qué lo usa el conector</th></tr></thead>
+        <tbody>
+          <tr><td data-i18n="permisos_offenses">Capacidad "Offenses" en el User Role</td><td data-i18n="permisos_offenses_uso">Necesario para las 3 operaciones</td></tr>
+        </tbody>
+      </table>
+      <p data-i18n="permisos_nota">No uses el rol "Admin" completo — acota el Security Profile a los dominios/redes relevantes.</p>
+    </section>
+
+    <section>
+      <h2 id="configuracion-ruvic" data-i18n="ruvic_h2">Configuración en Ruvic</h2>
+      <p data-i18n="ruvic_p1">Entra a <strong>Settings → Conectores</strong>, busca la tarjeta <strong>IBM QRadar</strong> y pulsa <strong>Configurar</strong>.</p>
+      <p data-i18n="ruvic_p2">Completa la <strong>URL de la consola</strong> y el <strong>SEC Token</strong>. Deja la versión de la API y el timeout en sus valores por defecto salvo necesidad específica.</p>
+      <p data-i18n="ruvic_p3">Guarda y pulsa <span class="ruvic-button" data-i18n="boton_probar_conexion">Probar conexión</span>.</p>
+    </section>
+
+    <section>
+      <h2 id="verificacion" data-i18n="verificacion_h2">Verificación</h2>
+      <ol class="ruvic-steps">
+        <li>
+          <strong data-i18n="verificacion_paso1_titulo">Test de conexión exitoso.</strong>
+          <p data-i18n="verificacion_paso1_texto">El botón <em>Probar conexión</em> debe responder: <em>"Conexión exitosa a [URL de la consola]"</em>.</p>
+        </li>
+        <li>
+          <strong data-i18n="verificacion_paso2_titulo">Prueba mínima con el agente.</strong>
+          <p data-i18n="verificacion_paso2_texto">Pide algo de solo lectura primero:</p>
+          <blockquote data-i18n="verificacion_paso2_cita">"¿Qué ofensas abiertas hay?"</blockquote>
+        </li>
+      </ol>
+    </section>
+
+    <section>
+      <h2 id="solucion-problemas" data-i18n="problemas_h2">Solución de problemas</h2>
+      <table>
+        <thead><tr><th data-i18n="problemas_tabla_col1">Mensaje / síntoma</th><th data-i18n="problemas_tabla_col2">Causa probable y solución</th></tr></thead>
+        <tbody>
+          <tr><td data-i18n="problemas_fila1_sintoma">"SEC token inválido o permisos insuficientes"</td><td data-i18n="problemas_fila1_causa">El token expiró, fue revocado, o el User Role no tiene la capacidad "Offenses" habilitada.</td></tr>
+          <tr><td data-i18n="problemas_fila2_sintoma">Error de certificado TLS</td><td data-i18n="problemas_fila2_causa">Muchas instalaciones de QRadar usan certificados autofirmados — considera desactivar "Verificar SSL" solo si confías en la red.</td></tr>
+          <tr><td data-i18n="problemas_fila3_sintoma">"No se pudo conectar..." (timeout/red)</td><td data-i18n="problemas_fila3_causa">Verifica que la consola sea alcanzable desde donde corre Ruvic — puede requerir VPN o whitelist de IP.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section>
+      <h2 id="faq-seguridad" data-i18n="faq_h2">Preguntas frecuentes y notas de seguridad</h2>
+      <h3 data-i18n="faq_p1_titulo">¿El agente puede eliminar ofensas?</h3>
+      <p data-i18n="faq_p1_texto">No. Solo puede listar, consultar detalle, y cambiar el estado (Open/Hidden/Closed) de ofensas existentes.</p>
+
+      <h3 data-i18n="faq_p2_titulo">¿Dónde queda guardado el SEC token?</h3>
+      <p data-i18n="faq_p2_texto">Como secreto en el almacén de credenciales de la plataforma. La interfaz nunca vuelve a mostrarlo.</p>
+
+      <h3 data-i18n="faq_p3_titulo">¿Qué hago si el token se compromete?</h3>
+      <p data-i18n="faq_p3_texto">Ve a Admin → Authorized Services en QRadar, elimina el servicio comprometido, crea uno nuevo, y actualiza el token en el formulario del conector.</p>
+
+      <div class="callout callout-warning">
+        <span class="callout-title" data-i18n="buenas_practicas_titulo">Buenas prácticas</span>
+        <span data-i18n="buenas_practicas_texto">Usa un Security Profile acotado, no "Admin"; ponle fecha de expiración al SEC token; y confirma la intención del usuario antes de cerrar/ocultar una ofensa real.</span>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    window.I18N = window.I18N || {};
+    window.I18N['qradar'] = {
+      es: {
+        "toc_titulo": "Contenido",
+        "toc_que_es": "¿Qué es y para qué sirve?",
+        "toc_prerrequisitos": "Prerrequisitos",
+        "toc_fabricante": "Configuración en el fabricante",
+        "toc_permisos": "Permisos requeridos",
+        "toc_ruvic": "Configuración en Ruvic",
+        "toc_verificacion": "Verificación",
+        "toc_problemas": "Solución de problemas",
+        "toc_faq": "Preguntas frecuentes y notas de seguridad",
+        "titulo": "Conector IBM QRadar",
+        "que_es_h2": "¿Qué es y para qué sirve?",
+        "que_es_p1": "El conector IBM QRadar permite que el agente de Ruvic consulte y gestione ofensas de seguridad en tu consola de QRadar — listar ofensas, ver su detalle completo, y actualizar su estado.",
+        "que_es_p2": "Una vez configurado, puedes pedirle al agente cosas como:",
+        "que_es_li1": "\"¿Qué ofensas abiertas hay?\"",
+        "que_es_li2": "\"Dame el detalle de la ofensa #123.\"",
+        "que_es_li3": "\"Cierra la ofensa #123, ya fue atendida.\"",
+        "que_es_p3": "Operaciones soportadas:",
+        "tabla_op_col1": "Operación",
+        "tabla_op_col2": "Qué hace",
+        "tabla_op_fila1": "Lista ofensas, con filtro por estado",
+        "tabla_op_fila2": "Consulta el detalle completo de una ofensa",
+        "tabla_op_fila3": "Actualiza el estado de una ofensa (Open/Hidden/Closed)",
+        "callout_info_titulo": "QRadar es siempre on-premise",
+        "callout_info_texto": "A diferencia de otros conectores en la nube, QRadar no tiene un endpoint compartido — cada cliente tiene su propia consola, con su propia URL.",
+        "prereq_h2": "Prerrequisitos",
+        "prereq_li1": "Una consola de <strong>IBM QRadar</strong> accesible por red desde donde corre Ruvic.",
+        "prereq_li2": "Acceso de administrador a QRadar para crear un Authorized Service (SEC token).",
+        "fabricante_h2": "Configuración en el fabricante",
+        "fabricante_paso1_titulo": "Ve a Authorized Services.",
+        "fabricante_paso1_texto": "En QRadar: Admin → User Management → Authorized Services.",
+        "fabricante_paso2_titulo": "Crea un nuevo servicio autorizado.",
+        "fabricante_paso2_texto": "Clic en \"Add Authorized Service\", nombre descriptivo (ej. \"Ruvic QRadar Connector\").",
+        "fabricante_paso3_titulo": "Elige el User Role y Security Profile.",
+        "fabricante_paso3_texto": "El User Role debe tener capacidad \"Offenses\" habilitada; el Security Profile debe acotarse a los dominios/redes que el agente necesita ver — evita usar \"Admin\" completo.",
+        "fabricante_paso4_titulo": "Define la expiración y copia el token.",
+        "fabricante_paso4_texto": "Pon una fecha de expiración (recomendado), genera el servicio, y copia el \"Authentication Token\" — es tu SEC token.",
+        "fabricante_paso5_titulo": "Despliega los cambios.",
+        "fabricante_paso5_texto": "Vuelve a la página de Admin y haz clic en \"Deploy Changes\" para activar el servicio.",
+        "permisos_h2": "Permisos requeridos",
+        "permisos_tabla_col1": "Permiso",
+        "permisos_tabla_col2": "Para qué lo usa el conector",
+        "permisos_offenses": "Capacidad \"Offenses\" en el User Role",
+        "permisos_offenses_uso": "Necesario para las 3 operaciones",
+        "permisos_nota": "No uses el rol \"Admin\" completo — acota el Security Profile a los dominios/redes relevantes.",
+        "ruvic_h2": "Configuración en Ruvic",
+        "ruvic_p1": "Entra a <strong>Settings → Conectores</strong>, busca la tarjeta <strong>IBM QRadar</strong> y pulsa <strong>Configurar</strong>.",
+        "ruvic_p2": "Completa la <strong>URL de la consola</strong> y el <strong>SEC Token</strong>. Deja la versión de la API y el timeout en sus valores por defecto salvo necesidad específica.",
+        "ruvic_p3": "Guarda y pulsa",
+        "boton_probar_conexion": "Probar conexión",
+        "verificacion_h2": "Verificación",
+        "verificacion_paso1_titulo": "Test de conexión exitoso.",
+        "verificacion_paso1_texto": "El botón <em>Probar conexión</em> debe responder: <em>\"Conexión exitosa a [URL de la consola]\"</em>.",
+        "verificacion_paso2_titulo": "Prueba mínima con el agente.",
+        "verificacion_paso2_texto": "Pide algo de solo lectura primero:",
+        "verificacion_paso2_cita": "\"¿Qué ofensas abiertas hay?\"",
+        "problemas_h2": "Solución de problemas",
+        "problemas_tabla_col1": "Mensaje / síntoma",
+        "problemas_tabla_col2": "Causa probable y solución",
+        "problemas_fila1_sintoma": "\"SEC token inválido o permisos insuficientes\"",
+        "problemas_fila1_causa": "El token expiró, fue revocado, o el User Role no tiene la capacidad \"Offenses\" habilitada.",
+        "problemas_fila2_sintoma": "Error de certificado TLS",
+        "problemas_fila2_causa": "Muchas instalaciones de QRadar usan certificados autofirmados — considera desactivar \"Verificar SSL\" solo si confías en la red.",
+        "problemas_fila3_sintoma": "\"No se pudo conectar...\" (timeout/red)",
+        "problemas_fila3_causa": "Verifica que la consola sea alcanzable desde donde corre Ruvic — puede requerir VPN o whitelist de IP.",
+        "faq_h2": "Preguntas frecuentes y notas de seguridad",
+        "faq_p1_titulo": "¿El agente puede eliminar ofensas?",
+        "faq_p1_texto": "No. Solo puede listar, consultar detalle, y cambiar el estado (Open/Hidden/Closed) de ofensas existentes.",
+        "faq_p2_titulo": "¿Dónde queda guardado el SEC token?",
+        "faq_p2_texto": "Como secreto en el almacén de credenciales de la plataforma. La interfaz nunca vuelve a mostrarlo.",
+        "faq_p3_titulo": "¿Qué hago si el token se compromete?",
+        "faq_p3_texto": "Ve a Admin → Authorized Services en QRadar, elimina el servicio comprometido, crea uno nuevo, y actualiza el token en el formulario del conector.",
+        "buenas_practicas_titulo": "Buenas prácticas",
+        "buenas_practicas_texto": "Usa un Security Profile acotado, no \"Admin\"; ponle fecha de expiración al SEC token; y confirma la intención del usuario antes de cerrar/ocultar una ofensa real."
+      },
+      en: {
+        "toc_titulo": "Contents",
+        "toc_que_es": "What is it and what is it for?",
+        "toc_prerrequisitos": "Prerequisites",
+        "toc_fabricante": "Vendor-side setup",
+        "toc_permisos": "Required permissions",
+        "toc_ruvic": "Setup in Ruvic",
+        "toc_verificacion": "Verification",
+        "toc_problemas": "Troubleshooting",
+        "toc_faq": "FAQ and security notes",
+        "titulo": "IBM QRadar Connector",
+        "que_es_h2": "What is it and what is it for?",
+        "que_es_p1": "The IBM QRadar connector lets the Ruvic agent query and manage security offenses in your QRadar console — list offenses, view their full details, and update their status.",
+        "que_es_p2": "Once configured, you can ask the agent things like:",
+        "que_es_li1": "\"What open offenses are there?\"",
+        "que_es_li2": "\"Give me the details for offense #123.\"",
+        "que_es_li3": "\"Close offense #123, it's already been handled.\"",
+        "que_es_p3": "Supported operations:",
+        "tabla_op_col1": "Operation",
+        "tabla_op_col2": "What it does",
+        "tabla_op_fila1": "Lists offenses, with filter by status",
+        "tabla_op_fila2": "Gets the full details of an offense",
+        "tabla_op_fila3": "Updates an offense's status (Open/Hidden/Closed)",
+        "callout_info_titulo": "QRadar is always on-premise",
+        "callout_info_texto": "Unlike other cloud connectors, QRadar has no shared endpoint — each customer has their own console, with their own URL.",
+        "prereq_h2": "Prerequisites",
+        "prereq_li1": "An <strong>IBM QRadar</strong> console network-reachable from where Ruvic runs.",
+        "prereq_li2": "Admin access to QRadar to create an Authorized Service (SEC token).",
+        "fabricante_h2": "Vendor-side setup",
+        "fabricante_paso1_titulo": "Go to Authorized Services.",
+        "fabricante_paso1_texto": "In QRadar: Admin → User Management → Authorized Services.",
+        "fabricante_paso2_titulo": "Create a new authorized service.",
+        "fabricante_paso2_texto": "Click \"Add Authorized Service\", give it a descriptive name (e.g. \"Ruvic QRadar Connector\").",
+        "fabricante_paso3_titulo": "Choose the User Role and Security Profile.",
+        "fabricante_paso3_texto": "The User Role must have \"Offenses\" capability enabled; the Security Profile should be scoped to the domains/networks the agent needs to see — avoid full \"Admin\".",
+        "fabricante_paso4_titulo": "Set expiration and copy the token.",
+        "fabricante_paso4_texto": "Set an expiration date (recommended), generate the service, and copy the \"Authentication Token\" — that's your SEC token.",
+        "fabricante_paso5_titulo": "Deploy the changes.",
+        "fabricante_paso5_texto": "Go back to the Admin page and click \"Deploy Changes\" to activate the service.",
+        "permisos_h2": "Required permissions",
+        "permisos_tabla_col1": "Permission",
+        "permisos_tabla_col2": "Why the connector needs it",
+        "permisos_offenses": "\"Offenses\" capability in the User Role",
+        "permisos_offenses_uso": "Needed for all 3 operations",
+        "permisos_nota": "Don't use the full \"Admin\" role — scope the Security Profile to the relevant domains/networks.",
+        "ruvic_h2": "Setup in Ruvic",
+        "ruvic_p1": "Go to <strong>Settings → Connectors</strong>, find the <strong>IBM QRadar</strong> card and click <strong>Configure</strong>.",
+        "ruvic_p2": "Fill in the <strong>console URL</strong> and the <strong>SEC Token</strong>. Leave the API version and timeout at their defaults unless you have a specific need.",
+        "ruvic_p3": "Save and click",
+        "boton_probar_conexion": "Test connection",
+        "verificacion_h2": "Verification",
+        "verificacion_paso1_titulo": "Successful connection test.",
+        "verificacion_paso1_texto": "The <em>Test connection</em> button should return: <em>\"Successful connection to [console URL]\"</em>.",
+        "verificacion_paso2_titulo": "Minimal test with the agent.",
+        "verificacion_paso2_texto": "Ask something read-only first:",
+        "verificacion_paso2_cita": "\"What open offenses are there?\"",
+        "problemas_h2": "Troubleshooting",
+        "problemas_tabla_col1": "Message / symptom",
+        "problemas_tabla_col2": "Likely cause and fix",
+        "problemas_fila1_sintoma": "\"Invalid SEC token or insufficient permissions\"",
+        "problemas_fila1_causa": "The token expired, was revoked, or the User Role doesn't have \"Offenses\" capability enabled.",
+        "problemas_fila2_sintoma": "TLS certificate error",
+        "problemas_fila2_causa": "Many QRadar installations use self-signed certificates — consider disabling \"Verify SSL\" only if you trust the network.",
+        "problemas_fila3_sintoma": "\"Could not connect...\" (timeout/network)",
+        "problemas_fila3_causa": "Verify the console is reachable from where Ruvic runs — may require VPN or IP whitelisting.",
+        "faq_h2": "FAQ and security notes",
+        "faq_p1_titulo": "Can the agent delete offenses?",
+        "faq_p1_texto": "No. It can only list, view details of, and change the status (Open/Hidden/Closed) of existing offenses.",
+        "faq_p2_titulo": "Where is the SEC token stored?",
+        "faq_p2_texto": "As a secret in the platform's credential store. The UI never displays it again.",
+        "faq_p3_titulo": "What do I do if the token is compromised?",
+        "faq_p3_texto": "Go to Admin → Authorized Services in QRadar, delete the compromised service, create a new one, and update the token in the connector form.",
+        "buenas_practicas_titulo": "Best practices",
+        "buenas_practicas_texto": "Use a scoped Security Profile, not \"Admin\"; set an expiration date on the SEC token; and confirm the user's intent before closing/hiding a real offense."
+      }
+    };
+  </script>
+</body>
+</html>

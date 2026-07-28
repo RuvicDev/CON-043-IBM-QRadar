@@ -1,0 +1,41 @@
+{
+  "id": "qradar",
+  "name": "IBM QRadar",
+  "name_en": "IBM QRadar",
+  "version": "1.0.0",
+  "description": "Consulta de ofensas y eventos en QRadar: listar ofensas, consultar el detalle de una ofensa, y actualizar su estado.",
+  "description_en": "Query offenses and events in QRadar: list offenses, get an offense's details, and update its status.",
+  "category": "cybersecurity",
+  "category_en": "cybersecurity",
+  "keywords": ["qradar", "ibm qradar", "siem", "ofensas", "offenses", "ciberseguridad", "cybersecurity"],
+  "icon": "icon.svg",
+  "library": {
+    "package": "ruvic-qradar-connector",
+    "install": "pip install git+https://github.com/tu-org/conector-qradar.git#subdirectory=lib",
+    "import_name": "ruvic_qradar_connector"
+  },
+  "auth_modes": [
+    {
+      "id": "sec_token",
+      "label": "SEC Token (Authorized Service Token)",
+      "fields": [
+        { "key": "console_host", "label": "URL de la consola QRadar", "type": "text", "required": true, "placeholder": "https://qradar.miempresa.com", "help_text": "QRadar es siempre on-premise — usa la URL de la consola de tu cliente/empresa, no hay endpoint compartido." },
+        { "key": "sec_token", "label": "SEC Token", "type": "password", "secret": true, "required": true, "help_text": "Generado en Admin → Authorized Services de QRadar." },
+        { "key": "api_version", "label": "Versión de la API", "type": "text", "required": false, "default": "20.0" },
+        { "key": "verify_ssl", "label": "Verificar certificado SSL", "type": "boolean", "required": false, "default": "true", "help_text": "Muchas instalaciones de QRadar usan certificados autofirmados — desactívalo solo si confías en la red." },
+        { "key": "request_timeout", "label": "Timeout de peticiones (segundos)", "type": "number", "required": false, "default": "30" }
+      ]
+    }
+  ],
+  "env_prefix": "RUVIC_QRADAR_",
+  "operations": [
+    "cybersecurity.list_offenses",
+    "cybersecurity.get_offense_detail",
+    "cybersecurity.update_offense_status"
+  ],
+  "test_connection": true,
+  "docs": {
+    "skill": "SKILL.md",
+    "permissions_note": "El SEC token debe generarse con un rol de usuario (User Role) que tenga permiso de 'Offenses' habilitado, y un perfil de seguridad (Security Profile) acotado a los dominios/redes que el agente necesita consultar — no uses el rol 'Admin' completo salvo necesidad real. Este conector no elimina ofensas ni gestiona reglas de correlación."
+  }
+}
