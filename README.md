@@ -65,4 +65,3 @@ python validate_local.py
 - El paquete pip es `ruvic-qradar-connector`; el import name es `ruvic_qradar_connector`.
 - Única dependencia externa: `requests`.
 - Ver `SKILL.md` para los ejemplos de uso que consume el agente.
-# conector-IBM-QRadar

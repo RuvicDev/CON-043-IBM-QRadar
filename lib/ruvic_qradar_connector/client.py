@@ -14,6 +14,7 @@ config.QRadarConfig.from_env). Prohibido hardcodearlas.
 
 from __future__ import annotations
 
+import re
 from typing import Any
 
 import requests
@@ -28,6 +29,17 @@ from .logging_utils import get_logger
 # algunas versiones, textual en otras vía closing_reason) — se maneja
 # el valor textual estándar de la API REST moderna.
 _VALID_STATUSES = ("OPEN", "HIDDEN", "CLOSED")
+
+# Los IDs de ofensa en QRadar son siempre numéricos: se valida estrictamente
+# ese formato para evitar path traversal en la URL construida.
+_OFFENSE_ID_RE = re.compile(r"^[0-9]+$")
+
+
+def _validate_offense_id(offense_id) -> str:
+    cleaned = str(offense_id).strip()
+    if not _OFFENSE_ID_RE.match(cleaned):
+        raise QRadarDataError(f"offense_id inválido: {offense_id!r}. Debe ser un número entero positivo.")
+    return cleaned
 
 
 class QRadarClient:
@@ -172,12 +184,13 @@ class QRadarClient:
             >>> client.get_offense_detail(123)
             {'id': 123, 'description': '...', 'severity': 7, ...}
         """
-        resp = self._request("GET", f"/api/siem/offenses/{offense_id}")
+        validated_id = _validate_offense_id(offense_id)
+        resp = self._request("GET", f"/api/siem/offenses/{validated_id}")
         if resp.status_code != 200:
-            self._raise_for_error(resp, f"get_offense_detail {offense_id}")
+            self._raise_for_error(resp, f"get_offense_detail {validated_id}")
 
         data = resp.json()
-        self._logger.info("get_offense_detail %s: OK", offense_id)
+        self._logger.info("get_offense_detail %s: OK", validated_id)
         return data
 
     # ------------------------------------------------------------------ #
@@ -198,17 +211,20 @@ class QRadarClient:
             >>> client.update_offense_status(123, "CLOSED")
             {'id': 123, 'status': 'CLOSED', ...}
         """
+        if not isinstance(status, str) or not status.strip():
+            raise QRadarDataError(f"status debe ser un texto no vacío, recibido: {status!r}.")
         if status.upper() not in _VALID_STATUSES:
             raise QRadarDataError(
                 f"status inválido: {status!r}. Debe ser uno de: {', '.join(_VALID_STATUSES)}."
             )
 
+        validated_id = _validate_offense_id(offense_id)
         resp = self._request(
-            "POST", f"/api/siem/offenses/{offense_id}", params={"status": status.upper()}
+            "POST", f"/api/siem/offenses/{validated_id}", params={"status": status.upper()}
         )
         if resp.status_code != 200:
-            self._raise_for_error(resp, f"update_offense_status {offense_id}")
+            self._raise_for_error(resp, f"update_offense_status {validated_id}")
 
         data = resp.json()
-        self._logger.info("Ofensa %s actualizada a estado %r", offense_id, status)
+        self._logger.info("Ofensa %s actualizada a estado %r", validated_id, status)
         return self._offense_to_dict(data)
